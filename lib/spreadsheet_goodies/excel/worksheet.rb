@@ -6,7 +6,7 @@ require_relative '../row'
 #   worksheet[0]['A column title']
 module SpreadsheetGoodies::Excel
   class Worksheet < SpreadsheetGoodies::AbstractBaseWorksheet
-    attr_reader :workbook, :worksheet
+    attr_reader :worksheet
 
     # @param workbook_file_pathname [String] Full path and filename to Excel workbook document
     # @param worksheet_title_or_index [String|Integer] Sheet name or index (zero-based)
@@ -14,18 +14,22 @@ module SpreadsheetGoodies::Excel
     # @param num_header_rows [Integer] Number of rows at the top of the sheet that
     #   contain headers or stuff other than data. Optional; if unspecified, assumes
     #   that a single top row contains the header and all rows below are data.
-    def initialize(workbook_file_pathname, worksheet_title_or_index=0, num_header_rows=1)
+    def initialize(roo_workbook_or_path, worksheet_title_or_index=0, num_header_rows=1)
       @worksheet_title = worksheet_title_or_index
       @num_header_rows = num_header_rows
 
-      @workbook = case workbook_file_pathname.to_s
-      when /\.xls[^x]/ then Roo::Excel.new(workbook_file_pathname, file_warning: :ignore)
-      when /\.xlsx/ then Roo::Excelx.new(workbook_file_pathname, file_warning: :ignore)
+      @workbook = if roo_workbook_or_path.is_a?(Roo::Excelx)
+        roo_workbook_or_path
+      else
+        case workbook_file_pathname.to_s
+          when /\.xls[^x]/ then Roo::Excel.new(workbook_file_pathname, file_warning: :ignore)
+          when /\.xlsx/ then Roo::Excelx.new(workbook_file_pathname, file_warning: :ignore)
+        end
       end
 
-      @worksheet = @workbook.sheet(worksheet_title_or_index)
+      @worksheet = @workbook.sheet(@worksheet_title)
 
-      @header_row = @worksheet.row(num_header_rows)
+      @header_row = @worksheet.row(@num_header_rows)
 
       # Reads all the worksheet rows, one at a time, using Workshete#row (note: reading
       # them all at once using Worksheet#parse didn't work because the first row
@@ -48,6 +52,5 @@ module SpreadsheetGoodies::Excel
     def spreadsheet
       @workbook
     end
-
   end
 end

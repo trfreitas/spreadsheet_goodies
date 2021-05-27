@@ -11,12 +11,17 @@ module SpreadsheetGoodies::GoogleDrive
       raise 'Session not found!' unless @session
     end
 
+    def read_workbook(spreadsheet_key)
+      puts "Reading worksheet from Google Drive..."
+      @workbook ||= @session.spreadsheet_by_key(spreadsheet_key)
+    end
+
     # Reads a GoogleDrive::Spreadsheet object from Google Drive, using the
     # google_drive gem. Documentation for this class can be found here:
     # https://www.rubydoc.info/github/gimite/google-drive-ruby/GoogleDrive/Spreadsheet
     def read_worksheet(spreadsheet_key, worksheet_title=nil)
-      puts "Reading sheet '#{worksheet_title}' from Google Drive..."
-      spreadsheet = @session.spreadsheet_by_key(spreadsheet_key)
+      puts "Reading sheet '#{worksheet_title}'"
+      spreadsheet = read_workbook(spreadsheet_key)
 
       if worksheet_title
         worksheet = spreadsheet.worksheet_by_title(worksheet_title)
@@ -24,10 +29,14 @@ module SpreadsheetGoodies::GoogleDrive
           raise "Worksheet named '#{worksheet_title}' not found in spreadsheet."
         end
       else
-        worksheet = spreadsheet.worksheets.first
+        worksheet = worksheets.first
       end
 
       worksheet
+    end
+
+    def worksheets
+      @workbook.worksheets
     end
 
     def read_worksheet_as_string(spreadsheet_key, worksheet_title)
