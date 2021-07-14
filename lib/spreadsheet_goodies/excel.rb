@@ -1,8 +1,8 @@
 
 module SpreadsheetGoodies::Excel
 
-  def self.read_worksheet(file_pathname:, worksheet_title_or_index:0, num_header_rows:1)
-    Worksheet.new(file_pathname, worksheet_title_or_index, num_header_rows)
+  def self.read_workbook(file_pathname:)
+    Workbook.new(file_pathname)
   end
 
 end
