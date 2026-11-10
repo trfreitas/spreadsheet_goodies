@@ -29,11 +29,11 @@ Gem::Specification.new do |gemspec|
   gemspec.executables = gemspec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   gemspec.require_paths = ['lib']
 
-  gemspec.add_development_dependency 'bundler', '~> 1.14'
-  gemspec.add_development_dependency 'rake', '~> 10.0'
+  gemspec.add_development_dependency 'bundler', '>= 1.14'
+  gemspec.add_development_dependency 'rake', '>= 12.3.3'
   gemspec.add_development_dependency 'rspec', '~> 3.0'
 
-  gemspec.add_dependency 'axlsx', '>= 2.0.1'
+  gemspec.add_dependency 'caxlsx', '>= 3.1'
   gemspec.add_dependency 'google_drive', '>= 2.1.5'
   gemspec.add_dependency 'csv', '>= 3.0.0'
   gemspec.add_dependency 'roo', '>= 1.13.2'
