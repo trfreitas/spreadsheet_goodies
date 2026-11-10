@@ -1,29 +1,33 @@
-# A cached copy of an Excel worksheet (a single workbook "tab"), stored as an
-# array of arrays. Individual cells can be accessed by column title, e.g.:
-#   worksheet[0]['A column title']
+# A Google Spreadsheet (a document with one or more worksheets, or "tabs").
+# Worksheets are read on demand with #worksheet.
 module SpreadsheetGoodies::GoogleDrive
   class Workbook
-    attr_reader :workbook
-
-    def initialize(spreadsheet_key)
+    # @param connector [Connector] Optional; shared by all worksheets read from
+    #   this workbook. Built from SpreadsheetGoodies.configuration if omitted.
+    def initialize(spreadsheet_key, connector: nil)
       @spreadsheet_key = spreadsheet_key
+      @connector = connector
+    end
+
+    # The spreadsheet metadata, as a Google::Apis::SheetsV4::Spreadsheet
+    def workbook
+      connector.read_workbook(@spreadsheet_key)
     end
 
     def sheets
-      underlying_adapter_worksheet.worksheets.map { |ws| ws.title }
+      connector.sheet_titles(@spreadsheet_key)
     end
 
+    # @param worksheet_title_or_index [String, Integer] Sheet title or
+    #   zero-based index
     def worksheet(worksheet_title_or_index = 0, num_header_rows = 1)
-      Worksheet.new(@spreadsheet_key, worksheet_title_or_index, num_header_rows)
+      Worksheet.new(@spreadsheet_key, worksheet_title_or_index, num_header_rows, connector: connector)
     end
 
     private
 
-    # Reads a GoogleDrive::Spreadsheet object from Google Drive, using the
-    # google_drive gem. Documentation for this class can be found here:
-    # https://www.rubydoc.info/github/gimite/google-drive-ruby/GoogleDrive/Spreadsheet
-    def underlying_adapter_worksheet
-      @underlying_adapter_worksheet ||= Connector.new.read_workbook(@spreadsheet_key)
+    def connector
+      @connector ||= Connector.new
     end
   end
 end

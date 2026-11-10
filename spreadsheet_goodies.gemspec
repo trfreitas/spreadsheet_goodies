@@ -28,13 +28,16 @@ Gem::Specification.new do |gemspec|
   gemspec.bindir = 'exe'
   gemspec.executables = gemspec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   gemspec.require_paths = ['lib']
+  gemspec.required_ruby_version = '>= 3.1'
 
   gemspec.add_development_dependency 'bundler', '>= 1.14'
   gemspec.add_development_dependency 'rake', '>= 12.3.3'
   gemspec.add_development_dependency 'rspec', '~> 3.0'
 
   gemspec.add_dependency 'caxlsx', '>= 3.1'
-  gemspec.add_dependency 'google_drive', '>= 2.1.5'
+  gemspec.add_dependency 'google-apis-sheets_v4', '~> 0.30'
+  gemspec.add_dependency 'googleauth', '~> 1.9'
+  gemspec.add_dependency 'jwt', '>= 3.2'
   gemspec.add_dependency 'csv', '>= 3.0.0'
   gemspec.add_dependency 'roo', '>= 1.13.2'
 

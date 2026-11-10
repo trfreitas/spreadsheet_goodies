@@ -29,11 +29,16 @@ Or install it yourself as:
 
 Read a Google Spreadsheet:
 ```ruby
-sheet = SpreadsheetGoodies::GoogleDrive.read_worksheet(
-  spreadsheet_key: '1UC43X6aZwlWPCnn...', # required,
-  worksheet_title: 'sheet1', # optional, first worksheet is loaded if not specified
+workbook = SpreadsheetGoodies::GoogleDrive.read_workbook(
+  spreadsheet_key: '1UC43X6aZwlWPCnn...', # required, taken from the spreadsheet url
 )
+workbook.sheets            # => ['sheet1', 'sheet2']
+sheet = workbook.worksheet # first worksheet
+sheet = workbook.worksheet('sheet1') # or by title, or by zero-based index
 ```
+
+Values are read as displayed in Google Sheets (formatted strings). Empty cells
+are `nil`, and every row has the same length.
 
 Read an Excel workbook:
 ```ruby
@@ -64,38 +69,57 @@ If you need to access a spreadsheet on Google Drive that is not publicly accessi
 you are required to setup an authentication method. Currently, there are two available
 authentication methods.
 
+Both methods use the Google Sheets API, which must be enabled in your project at
+https://console.cloud.google.com/apis/library/sheets.googleapis.com. The only
+scope requested is `https://www.googleapis.com/auth/spreadsheets`.
+
 ### OAuth2
-To setup OAuth2, first you must configure your Google client id and a client secret
-like the example below. If you don't have a client id yet, you must create a project
-and enable the GoogleDrive API at https://console.developers.google.com. Then you
-need to create a OAuth client id.
-```ruby
-SpreadsheetGoodies.configure do |config|
-  config.login_method = :oauth2
-  config.google_client_id = '1012345678904-fdks82jfhe8ojdks7285fj4pnqiejrnbt.apps.googleusercontent.com' # put your real client id here
-  config.client_secret = 'Aa-Ku8C-askjfAYKkdjf9ssnf' # put your real secret here
-end
-```
+1. At https://console.cloud.google.com/apis/credentials, create an OAuth client
+   ID of type **Desktop app** and note its client id and client secret.
+2. On a machine with a browser, generate a refresh token once:
+   ```ruby
+   require 'spreadsheet_goodies'
+   SpreadsheetGoodies::GoogleDrive::Connector.generate_refresh_token(
+     client_id: 'YOUR_CLIENT_ID',
+     client_secret: 'YOUR_CLIENT_SECRET',
+   )
+   ```
+   It prints an authorization URL and waits on a temporary local address
+   (`http://127.0.0.1:<port>`). Open the URL, authorize access, and Google
+   redirects back to that address. The refresh token is printed and returned.
+3. Configure the gem with the three values:
+   ```ruby
+   SpreadsheetGoodies.configure do |config|
+     config.login_method = :oauth2
+     config.google_client_id = ENV['GOOGLE_CLIENT_ID']
+     config.client_secret = ENV['GOOGLE_CLIENT_SECRET']
+     config.refresh_token = ENV['GOOGLE_REFRESH_TOKEN']
+   end
+   ```
 
-Then run your code. You will be prompted to make the authorization process to obtain
-a refresh token:
-```
-1. Open this page:
-https://accounts.google.com/o/oauth2/auth?access_type=offline&client_id=1012345678904-fdks82jfhe8ojdks7285fj4pnqiejrnbt.apps.googleusercontent.com&redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=code&scope=https://www.googleapis.com/auth/drive%20https://spreadsheets.google.com/feeds/
-
-2. Enter the authorization code shown in the page: 4/LADQHhpk7x27BMeP2tIEe_pKuTJmJmZhWoRcBhBmFTVRqSEtcap7Z6s
-
-Congratulations! Your refresh token is: 1/c9JDKAUF83_4SPqNc8ldQWe9TdXOxqXvMJJPtmDA2k
-Set the refresh_token in your SpreadsheetGoodies configuration and run your code again
-```
+Refresh tokens obtained with versions before 0.2.0 keep working.
 
 ### Service Accounts
+Share the spreadsheet with the service account's e-mail address, then:
 ```ruby
 SpreadsheetGoodies.configure do |config|
   config.login_method = :service_account
-  config.service_account_key_json = '...'
+  config.service_account_key_json = File.read('service_account_key.json')
 end
 ```
+
+## Upgrading to 0.2.0
+* Requires Ruby >= 3.1.
+* The `google_drive` gem was replaced by `google-apis-sheets_v4` and
+  `googleauth ~> 1.9`. `Connector` no longer exposes a `GoogleDrive::Session`;
+  `Connector#read_workbook` and `Workbook#workbook` now return a
+  `Google::Apis::SheetsV4::Spreadsheet`, and `Connector#service` returns the
+  `Google::Apis::SheetsV4::SheetsService`. `Connector#read_worksheet` and
+  `Connector#worksheets` were removed.
+* `Workbook#worksheet` accepts a zero-based index (it used to fail with one).
+* The interactive refresh token prompt was replaced by
+  `Connector.generate_refresh_token`; a missing refresh token now raises an error.
+* `axlsx` was replaced by `caxlsx`.
 
 ## Contributing
 
